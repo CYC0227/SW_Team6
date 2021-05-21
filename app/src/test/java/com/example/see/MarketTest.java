@@ -1,13 +1,11 @@
 package com.example.see;
 
-import junit.framework.TestCase;
-
 import org.junit.Test;
 
-import javax.inject.Named;
+import static org.junit.Assert.*;
 
-public class MarketTest extends TestCase {
 
+public class MarketTest {
     @Test
     public void test(){
         assertEquals(4,4);
