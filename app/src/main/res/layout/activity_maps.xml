@@ -26,5 +26,11 @@
         android:layout_height="wrap_content"
         android:text="Test" />
 
+    <Button
+        android:id="@+id/reserveTime"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Reserve Time" />
+
 
 </LinearLayout>

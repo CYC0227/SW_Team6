@@ -19,6 +19,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
+    reservation reserv;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,6 +35,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onClick(View view){
                 Intent intent=new Intent(getApplicationContext(), Info.class);
+                startActivity(intent);
+            }
+        });
+
+        Button btnReservTime= (Button) findViewById(R.id.reserveTime);
+        btnReservTime.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent=new Intent(getApplicationContext(), reservation.class);
                 startActivity(intent);
             }
         });
