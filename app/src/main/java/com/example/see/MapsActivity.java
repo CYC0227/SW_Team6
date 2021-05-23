@@ -286,6 +286,8 @@ public class MapsActivity extends AppCompatActivity
 
     public void onClickButtonMaps(View view){
         movedCameraState = 0;
+        if (mPlaces != null)
+            mPlaces.clear();
         //위치 접근 권한 처리
         //1. 위치 접근 권한이 있다면,
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
@@ -316,7 +318,10 @@ public class MapsActivity extends AppCompatActivity
     //지역 검색이 성공하면 호출됨.
     @Override
     public void onPlacesSuccess(final List<Place> places) {
-        mPlaces = places;
+        if ( mPlaces == null )
+            mPlaces = places;
+        else
+            mPlaces.addAll(places);
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
