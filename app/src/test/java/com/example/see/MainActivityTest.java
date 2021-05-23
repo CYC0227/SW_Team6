@@ -9,9 +9,26 @@ public class MainActivityTest {
     MainActivity mainActivity = new MainActivity();
 
     @Test
-    void 로그인_테스트(){
-        //if user info from db ==
+    void 로그인_테스트_성공(){
+        String test_id="1111";
+        String test_pw="1234";
 
+        String user_id = mainActivity.userid;
+        String user_pw = mainActivity.userpw;
 
+        assertEquals(test_id, user_id);
+        assertEquals(test_pw,user_pw);
     }
+
+//    @Test
+//    void 로그인_테스트_실패(){
+//        String test_id="2222";
+//        String test_pw="4321";
+//
+//        String user_id = mainActivity.userid;
+//        String user_pw = mainActivity.userpw;
+//
+//        assertEquals(test_id, user_id);
+//        assertEquals(test_pw,user_pw);
+//    }
 }
