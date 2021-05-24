@@ -1,9 +1,12 @@
 package com.example.see;
 
 import android.Manifest;
+import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.location.Location;
@@ -39,7 +42,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -57,6 +59,10 @@ public class MapsActivity extends AppCompatActivity
         PlacesListener,
         GoogleMap.OnMarkerClickListener,
         GoogleMap.OnMapClickListener{
+
+    //sql
+    SQLiteDatabase db;
+    MySQLiteOpenHelper helper;
 
     //구글 맵 객체
     private GoogleMap mMap;
@@ -103,12 +109,43 @@ public class MapsActivity extends AppCompatActivity
     //전체 레이아웃
     private View mLayout;
 
+    //참여버튼
+    private Button button_join = findViewById(R.id.join);;
 
+
+    String placeId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+
+        helper = new MySQLiteOpenHelper(MapsActivity.this, "restaurant.db", null, 1);
+
+        //일단 임의로 설정
+        insert("ChIJFwvgnfqpfDUR5IlhmJ088WU", 4, 0);
+        insert("ChIJWQdpaqCofDURWLT-6DDWo7I", 10, 0);
+        insert("ChIJWQdpaqCofDURWbMIMdaOjJg", 5, 0);
+        insert("ChIJWQdpaqCofDURKBe0tsY2JKM", 4, 0);
+        insert("ChIJWQdpaqCofDURkTJGlQxLJVI", 2, 0);
+        insert("ChIJWQdpaqCofDURirNpdHuTZpM", 4, 0);
+        insert("ChIJWQdpaqCofDURuu0w6oph7rg", 2, 0);
+        insert("ChIJWQdpaqCofDURX1YmFfS3J-s", 5, 0);
+        insert("ChIJuwcSjZ-ofDURDoYru6lZR9U", 5, 0);
+        insert("ChIJuwcSjZ-ofDURyUP6NiiCfwU", 5, 0);
+        insert("ChIJxfSbuompfDURCne8wMu-cRs", 5, 0);
+        insert("ChIJAy6v7J-ofDURgrgl8SMgGNc", 5, 0);
+
+
+
+        button_join.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+//정원 추가
+                update(placeId, 4,  getGroupPeople( placeId) + 1);
+            }
+        });
+
 
         //타이틀바 제거
         ActionBar actionBar = getSupportActionBar();
@@ -215,6 +252,7 @@ public class MapsActivity extends AppCompatActivity
         }
 
     };
+
 
 
     //위치 업데이트 시작
@@ -420,7 +458,25 @@ public class MapsActivity extends AppCompatActivity
 
     //각 식당 별 그룹인원 반환 : String place_id로 식당 구분
     public int getGroupPeople(String place_id){
-        return (int)((Math.random()*10000)%5);
+        String id;
+        int capacity;
+        int now = 0;
+
+        StringBuffer sb = new StringBuffer();
+        sb.append("SELECT id, capacity,now FROM RESTAURANT WHERE id = " + place_id);
+
+        SQLiteDatabase db = helper.getReadableDatabase();
+
+        Cursor cursor = db.rawQuery(sb.toString(),null);
+
+        while(cursor.moveToNext()){
+            id = cursor.getString(0);
+            capacity = cursor.getInt(1);
+            now = cursor.getInt(2);
+        }
+
+//        return (int)((Math.random()*10000)%5);
+        return now;
     }
 
 
@@ -431,7 +487,7 @@ public class MapsActivity extends AppCompatActivity
         mMap.animateCamera(CameraUpdateFactory.newLatLng(marker.getPosition()));
 
         //마커의 placeid를 찾아서, 정보 입력
-        String placeId = (String) marker.getTag();
+        placeId = (String) marker.getTag();
         for (noman.googleplaces.Place place : mPlaces){
             if ( placeId == place.getPlaceId() ){
                 restName.setText( place.getName() );
@@ -448,7 +504,42 @@ public class MapsActivity extends AppCompatActivity
 
     //지도를 클릭하면 식당 정보창을 숨깁니다.
     @Override
-    public void onMapClick(@NonNull @NotNull LatLng latLng) {
+    public void onMapClick(@NonNull  LatLng latLng) {
         restInfo.setVisibility(View.GONE);
+    }
+
+
+    public void insert(String id, int capacity, int now) {
+        db = helper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("id", id);
+        values.put("capacity", capacity);
+        values.put("now", now);
+        db.insert("restaurant", null, values);
+    }
+    public void update (String id, int capacity, int now) {
+        db = helper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("capacity", capacity);
+        values.put("now", now);
+
+        db.update("retaurant", values, "id=?", new String[]{id});
+    }
+    public void delete (String id) {
+        db = helper.getWritableDatabase();
+        db.delete("retaurant", "id=?", new String[]{id});
+        Log.i("db1", id + "정상적으로 삭제 되었습니다.");
+    }
+    public void select() {
+        db = helper.getReadableDatabase();
+        Cursor c = db.query("retaurant", null, null, null, null, null, null);
+        /* query (String table, String[] columns, String selection, String[]
+         * selectionArgs, String groupBy, String having, String orderBy)
+         */
+        while (c.moveToNext()) {
+            String id = c.getString(c.getColumnIndex("id"));
+            int capacity = c.getInt(c.getColumnIndex("capacity"));
+            int now = c.getInt(c.getColumnIndex("now"));
+        }
     }
 }
