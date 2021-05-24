@@ -16,7 +16,9 @@ public class MySQLiteOpenHelper extends SQLiteOpenHelper {
         String sql = "create table restaurant (" +
                 "id text, " +//_id?
                 "capacity integer, " +
-                "now integer);";
+                "now integer, " +
+                "reserve text" +
+                ");";
         db.execSQL(sql);
     }
     @Override

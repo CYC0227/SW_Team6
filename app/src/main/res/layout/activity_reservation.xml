@@ -62,12 +62,12 @@
             android:layout_gravity="center"
             android:text="Set time" />
 
-        <RadioButton
-            android:id="@+id/radioNum"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="left"
-            android:text="Set Number of people" />
+<!--        <RadioButton-->
+<!--            android:id="@+id/radioNum"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_gravity="left"-->
+<!--            android:text="Set Number of people" />-->
 
     </RadioGroup>
 

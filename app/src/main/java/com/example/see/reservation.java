@@ -1,5 +1,7 @@
 package com.example.see;
 
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -8,14 +10,16 @@ import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.TimePicker;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class reservation extends AppCompatActivity {
 
-    RadioButton radioCal, radioTime, radioNum;
+    RadioButton radioCal, radioTime;
     Button btnMR;
     EditText numOfPeople;
     TimePicker timePicker;
@@ -34,7 +38,7 @@ public class reservation extends AppCompatActivity {
 
         radioCal = (RadioButton) findViewById(R.id.radioCal);
         radioTime = (RadioButton) findViewById(R.id.radioTime);
-        radioNum = (RadioButton) findViewById(R.id.radioNum);
+//        radioNum = (RadioButton) findViewById(R.id.radioNum);
 
         timePicker = (TimePicker) findViewById(R.id.timePicker);
         calView = (CalendarView) findViewById(R.id.calendarView);
@@ -46,6 +50,8 @@ public class reservation extends AppCompatActivity {
         tvHour = (TextView) findViewById(R.id.tvHour);
         tvMin = (TextView) findViewById(R.id.tvMin);
         tvNum = (TextView) findViewById(R.id.tvNum);
+
+        tvNum.setText(getIntent().getStringExtra("INPUT_NUMBER"));
 
         timePicker.setVisibility(View.INVISIBLE);
         calView.setVisibility(View.INVISIBLE);
@@ -60,8 +66,47 @@ public class reservation extends AppCompatActivity {
                 tvDay.setText(Integer.toString(selectD));
                 tvHour.setText(Integer.toString(timePicker.getCurrentHour()));
                 tvMin.setText(Integer.toString(timePicker.getCurrentMinute()));
-                String str = numOfPeople.getText().toString();
-                tvNum.setText(str);
+//                String str = numOfPeople.getText().toString();
+//                tvNum.setText(str);
+
+                AlertDialog.Builder alertDialogBuilder =
+                        new AlertDialog.Builder(reservation.this);
+                alertDialogBuilder.setMessage("예약하시겠습니까?\n" +
+                        Integer.toString(selectY) + "/" +
+                        Integer.toString(selectM) + "/" +
+                        Integer.toString(selectD) + " " +
+                        Integer.toString(timePicker.getCurrentHour()) + ":" +
+                        Integer.toString(timePicker.getCurrentMinute()) + " " +
+                        getIntent().getStringExtra("INPUT_NUMBER") + "명")
+                        .setPositiveButton("예",
+                                new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        Toast.makeText(reservation.this, "예약이 완료되었습니다.",
+                                                Toast.LENGTH_LONG).show();
+                                        Intent intent = new Intent();
+                                        intent.putExtra("INPUT_TEXT",
+                                                Integer.toString(selectY) + "/" +
+                                                        Integer.toString(selectM) + "/" +
+                                                        Integer.toString(selectD) + " " +
+                                                        Integer.toString(timePicker.getCurrentHour()) + ":" +
+                                                        Integer.toString(timePicker.getCurrentMinute()) + " " +
+                                                        getIntent().getStringExtra("INPUT_NUMBER") + "명");
+                                        setResult(RESULT_OK, intent);
+                                        finish();
+                                    }
+                                })
+                        .setNegativeButton("아니오",
+                                new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        Toast.makeText(reservation.this, "예약이 취소되었습니다.",
+                                                Toast.LENGTH_LONG).show();
+                                    }
+                                });
+
+                AlertDialog alertDialog = alertDialogBuilder.create();
+                alertDialog.show();
             }
         });
 
@@ -83,15 +128,15 @@ public class reservation extends AppCompatActivity {
                 tv_.setVisibility(View.INVISIBLE);
             }
         });
-        radioNum.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                timePicker.setVisibility(View.INVISIBLE);
-                calView.setVisibility(View.INVISIBLE);
-                numOfPeople.setVisibility(View.VISIBLE);
-                tv_.setVisibility(View.VISIBLE);
-            }
-        });
+//        radioNum.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                timePicker.setVisibility(View.INVISIBLE);
+//                calView.setVisibility(View.INVISIBLE);
+//                numOfPeople.setVisibility(View.VISIBLE);
+//                tv_.setVisibility(View.VISIBLE);
+//            }
+//        });
 
         calView.setOnDateChangeListener(new CalendarView.OnDateChangeListener(){
             @Override

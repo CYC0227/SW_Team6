@@ -19,6 +19,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
@@ -112,6 +113,9 @@ public class MapsActivity extends AppCompatActivity
     //참여버튼
     private Button button_join;
 
+    Marker mMarker;
+
+    static final int GET_STRING = 1;
 
     String placeId;
 
@@ -122,49 +126,39 @@ public class MapsActivity extends AppCompatActivity
 
         helper = new MySQLiteOpenHelper(MapsActivity.this, "restaurant.db", null, 1);
 
-        //일단 임의로 설정
-        insert("ChIJFwvgnfqpfDUR5IlhmJ088WU", 4, 0);
-        insert("ChIJWQdpaqCofDURWLT-6DDWo7I", 8, 0);
-        insert("ChIJWQdpaqCofDURWbMIMdaOjJg", 5, 0);
-        insert("ChIJWQdpaqCofDURKBe0tsY2JKM", 4, 0);
-        insert("ChIJWQdpaqCofDURkTJGlQxLJVI", 2, 0);
-        insert("ChIJWQdpaqCofDURirNpdHuTZpM", 4, 0);
-        insert("ChIJWQdpaqCofDURuu0w6oph7rg", 2, 0);
-        insert("ChIJWQdpaqCofDURX1YmFfS3J-s", 5, 0);
-        insert("ChIJuwcSjZ-ofDURDoYru6lZR9U", 5, 0);
-        insert("ChIJuwcSjZ-ofDURyUP6NiiCfwU", 5, 0);
-        insert("ChIJxfSbuompfDURCne8wMu-cRs", 5, 0);
-        insert("ChIJAy6v7J-ofDURgrgl8SMgGNc", 5, 0);
+        createTable();
 
-        insert("ChIJN76tFKCofDURCCmCS4Ki5WA", 4, 0);
-        insert("ChIJc0QgPKCofDURtlM6UdX9nEc", 6, 0);
-        insert("ChIJ-bZtIqCofDURxE6RGlIxtLo", 5, 0);
-        insert("ChIJ9VGVG5CpfDURuKlOERqL04E", 4, 0);
-        insert("ChIJnWG00BmpfDURu1tHNLj1F4o", 2, 0);
-        insert("ChIJz_vSJKCofDUR1Oins8LRBXE", 4, 0);
-        insert("ChIJYfnSJKCofDURTbp3jC8SS0M", 2, 0);
-        insert("ChIJEWQwAHypfDURHZjw1EgBeqQ", 5, 0);
-        insert("ChIJtYEkPKCofDURUhY63EKzdl4", 5, 0);
-        insert("ChIJze3nIKCofDUR8nw9zokc_Bk", 4, 0);
-        insert("ChIJl4hvIKCofDURxKnfzWqX6ok", 5, 0);
-        insert("ChIJl4hvIKCofDURcFjhejLgQR4", 5, 0);
-
-        insert("ChIJl4hvIKCofDURqyxaLzUCE8w", 4, 0);
-        insert("ChIJGdaK7TGpfDUReYOg5WFl1ZM", 5, 0);
-        insert("ChIJ3_DLP6CofDURJnuZw7Kfwg4", 5, 0);
-        insert("ChIJVfn_MKCofDURuWUhXbWTEGE", 3, 0);
-        insert("ChIJUVNrFaCofDUR6XhTr_b-Qso", 5, 0);
-        insert("ChIJUVNrFaCofDURXzK0-E6Qraw", 5, 0);
-        insert("ChIJUVNrFaCofDURiRPHd12sUyM", 5, 0);
-        insert("ChIJN6NHFaCofDURnNxIn68IEik", 5, 0);
-
+        //참여버튼
         button_join = (Button)findViewById(R.id.join);
-
         button_join.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//정원 추가
-                update(placeId, getCapacityGroupPeople(placeId), getNowGroupPeople(placeId) + 1);
+                //현재원 추가
+                update(placeId, getCapacityGroupPeople(placeId), getNowGroupPeople(placeId) + 1, " ");
+                //정보창 업데이트
+                restGroup.setText( "현재 그룹 인원 : " + getNowGroupPeople( placeId ) + "명");
+                //마커 업데이트
+                if ( getNowGroupPeople( (String)mMarker.getTag() ) == 0 )
+                    tvMarker.setText("");
+                else
+                    tvMarker.setText( Integer.toString( getNowGroupPeople( (String)mMarker.getTag() ) )+
+                        "/" +  Integer.toString( getCapacityGroupPeople( (String)mMarker.getTag()) ) );
+
+                placeId = (String)mMarker.getTag();
+                for (noman.googleplaces.Place place : mPlaces){
+                    if ( placeId == place.getPlaceId() ){
+                        tvLabel.setText( place.getName() );
+                    }
+                }
+
+                MarkerOptions markerOptions = new MarkerOptions();
+                markerOptions.position(mMarker.getPosition());
+                markerOptions.icon(BitmapDescriptorFactory.fromBitmap
+                        (generateBitmap(markerView)));
+                mMap.addMarker(markerOptions);
+
+
+
             }
 
 
@@ -204,16 +198,62 @@ public class MapsActivity extends AppCompatActivity
         //onMapReady 호출
         mapFragment.getMapAsync(this);
 
+
+        //예약 버튼이 눌리면 엑티비티 이동
         Button btnReservTime= (Button) findViewById(R.id.reserveTime);
         btnReservTime.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent=new Intent(getApplicationContext(), reservation.class);
-                startActivity(intent);
+                intent.putExtra("INPUT_NUMBER", Integer.toString(getNowGroupPeople(placeId)) );
+                startActivityForResult(intent, GET_STRING);
             }
         });
     }
 
+    //예약 정보를 받아오면 데이터 베이스에 저장
+    @Override
+    protected void onActivityResult(int requestcode, int resultcode, Intent data) {
+        super.onActivityResult(requestcode, resultcode, data);
+        if (requestcode == GET_STRING) {
+            if (resultcode == RESULT_OK) {
+
+                StringBuffer sb = new StringBuffer();
+                sb.append("SELECT id, capacity,now FROM RESTAURANT WHERE id = " + "'" +placeId+ "'");
+
+                SQLiteDatabase db = helper.getReadableDatabase();
+
+                Cursor cursor = db.rawQuery(sb.toString(),null);
+
+                while(cursor.moveToNext()){
+                    update(placeId, 0, 0, data.getStringExtra("INPUT_TEXT"));
+                }
+
+                //정보창 업데이트
+                restGroup.setText( "현재 그룹 인원 : " + getNowGroupPeople( placeId ) + "명");
+                //마커 업데이트
+                if ( getNowGroupPeople( (String)mMarker.getTag() ) == 0 )
+                    tvMarker.setText("");
+                else
+                    tvMarker.setText( Integer.toString( getNowGroupPeople( (String)mMarker.getTag() ) )+
+                            "/" +  Integer.toString( getCapacityGroupPeople( (String)mMarker.getTag()) ) );
+
+                placeId = (String)mMarker.getTag();
+                for (noman.googleplaces.Place place : mPlaces){
+                    if ( placeId == place.getPlaceId() ){
+                        tvLabel.setText( place.getName() );
+                    }
+                }
+
+                MarkerOptions markerOptions = new MarkerOptions();
+                markerOptions.position(mMarker.getPosition());
+                markerOptions.icon(BitmapDescriptorFactory.fromBitmap
+                        (generateBitmap(markerView)));
+                mMap.addMarker(markerOptions);
+
+            }
+        }
+    }
 
     //맵 초기화
     @Override
@@ -221,7 +261,7 @@ public class MapsActivity extends AppCompatActivity
 
         mMap = googleMap;
 
-        //초기위치로 이동 : 가천대
+        //초기위치로 이동 : 서울
         setDefaultLocation();
 
         //줌 버튼 표시
@@ -240,8 +280,8 @@ public class MapsActivity extends AppCompatActivity
 
     //지도 초기 위치 설정
     public void setDefaultLocation() {
-        //가천대 IT 대학 초기 위치로 설정
-        LatLng DEFAULT_LOCATION = new LatLng(37.451055, 127.127145);
+        //서울을 초기 위치로 설정
+        LatLng DEFAULT_LOCATION = new LatLng(37.553305, 126.972675);
         //초기 위치, 줌레벨 18로 카메라 이동
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(DEFAULT_LOCATION, 18));
     }
@@ -404,7 +444,10 @@ public class MapsActivity extends AppCompatActivity
                             , place.getLongitude());
 
                     //현재 그룹 인원 마커에 표시
-                    tvMarker.setText( Integer.toString( getNowGroupPeople(place.getPlaceId()) ) +
+                    if ( getNowGroupPeople( place.getPlaceId() ) == 0 )
+                        tvMarker.setText("");
+                    else
+                        tvMarker.setText( Integer.toString( getNowGroupPeople(place.getPlaceId()) ) +
                             "/" +  Integer.toString( getCapacityGroupPeople(place.getPlaceId()) ));
                     //식당이름 표시
                     tvLabel.setText( place.getName() );
@@ -422,7 +465,7 @@ public class MapsActivity extends AppCompatActivity
 
                 }
 
-                    HashSet<Marker> hashSet = new HashSet<Marker>();
+                HashSet<Marker> hashSet = new HashSet<Marker>();
                 hashSet.addAll(markerList);
                 markerList.clear();
                 markerList.addAll(hashSet);
@@ -488,7 +531,7 @@ public class MapsActivity extends AppCompatActivity
         int now = 0;
 
         StringBuffer sb = new StringBuffer();
-        sb.append("SELECT id, capacity,now FROM RESTAURANT WHERE id = " + "'" +place_id+ "'");
+        sb.append("SELECT id, capacity,now,reserve FROM RESTAURANT WHERE id = " + "'" +place_id+ "'");
 
         SQLiteDatabase db = helper.getReadableDatabase();
 
@@ -509,7 +552,7 @@ public class MapsActivity extends AppCompatActivity
         int now = 0;
 
         StringBuffer sb = new StringBuffer();
-        sb.append("SELECT id, capacity,now FROM RESTAURANT WHERE id = " + "'" +place_id+ "'");
+        sb.append("SELECT id, capacity,now,reserve FROM RESTAURANT WHERE id = " + "'" +place_id+ "'");
 
         SQLiteDatabase db = helper.getReadableDatabase();
 
@@ -529,6 +572,8 @@ public class MapsActivity extends AppCompatActivity
     public boolean onMarkerClick(@NonNull final Marker marker) {
         //마커를 중심으로 카메라 이동
         mMap.animateCamera(CameraUpdateFactory.newLatLng(marker.getPosition()));
+
+        mMarker = marker;
 
         //마커의 placeid를 찾아서, 정보 입력
         placeId = (String) marker.getTag();
@@ -553,19 +598,22 @@ public class MapsActivity extends AppCompatActivity
     }
 
 
-    public void insert(String id, int capacity, int now) {
+    public void insert(String id, int capacity, int now, String reserve) {
         db = helper.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put("id", id);
         values.put("capacity", capacity);
         values.put("now", now);
+        values.put("reserve", reserve);
+
         db.insert("restaurant", null, values);
     }
-    public void update (String id, int capacity, int now) {
+    public void update (String id, int capacity, int now, String reserve) {
         db = helper.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put("capacity", capacity);
         values.put("now", now);
+        values.put("reserve", reserve);
 
         db.update("restaurant", values, "id=?", new String[]{id});
     }
@@ -585,5 +633,41 @@ public class MapsActivity extends AppCompatActivity
             int capacity = c.getInt(c.getColumnIndex("capacity"));
             int now = c.getInt(c.getColumnIndex("now"));
         }
+    }
+
+    public void createTable(){
+        //일단 임의로 설정
+        insert("ChIJFwvgnfqpfDUR5IlhmJ088WU", 4, 2, "null");
+        insert("ChIJWQdpaqCofDURWLT-6DDWo7I", 8, 3, "null");
+        insert("ChIJWQdpaqCofDURWbMIMdaOjJg", 5, 0, "null");
+        insert("ChIJWQdpaqCofDURKBe0tsY2JKM", 4, 1, "null");
+        insert("ChIJWQdpaqCofDURkTJGlQxLJVI", 2, 0, "null");
+        insert("ChIJWQdpaqCofDURirNpdHuTZpM", 4, 2, "null");
+        insert("ChIJWQdpaqCofDURuu0w6oph7rg", 2, 1, "null");
+        insert("ChIJWQdpaqCofDURX1YmFfS3J-s", 5, 0, "null");
+        insert("ChIJuwcSjZ-ofDURDoYru6lZR9U", 5, 2, "null");
+        insert("ChIJuwcSjZ-ofDURyUP6NiiCfwU", 5, 4, "null");
+        insert("ChIJxfSbuompfDURCne8wMu-cRs", 5, 2, "null");
+        insert("ChIJAy6v7J-ofDURgrgl8SMgGNc", 5, 0, "null");
+        insert("ChIJN76tFKCofDURCCmCS4Ki5WA", 4, 1, "null");
+        insert("ChIJc0QgPKCofDURtlM6UdX9nEc", 6, 3, "null");
+        insert("ChIJ-bZtIqCofDURxE6RGlIxtLo", 5, 2, "null");
+        insert("ChIJ9VGVG5CpfDURuKlOERqL04E", 4, 0, "null");
+        insert("ChIJnWG00BmpfDURu1tHNLj1F4o", 2, 1, "null");
+        insert("ChIJz_vSJKCofDUR1Oins8LRBXE", 4, 2, "null");
+        insert("ChIJYfnSJKCofDURTbp3jC8SS0M", 2, 0, "null");
+        insert("ChIJEWQwAHypfDURHZjw1EgBeqQ", 5, 3, "null");
+        insert("ChIJtYEkPKCofDURUhY63EKzdl4", 5, 2, "null");
+        insert("ChIJze3nIKCofDUR8nw9zokc_Bk", 4, 0, "null");
+        insert("ChIJl4hvIKCofDURxKnfzWqX6ok", 5, 2, "null");
+        insert("ChIJl4hvIKCofDURcFjhejLgQR4", 5, 3, "null");
+        insert("ChIJl4hvIKCofDURqyxaLzUCE8w", 4, 2, "null");
+        insert("ChIJGdaK7TGpfDUReYOg5WFl1ZM", 5, 3, "null");
+        insert("ChIJ3_DLP6CofDURJnuZw7Kfwg4", 5, 2, "null");
+        insert("ChIJVfn_MKCofDURuWUhXbWTEGE", 3, 2, "null");
+        insert("ChIJUVNrFaCofDUR6XhTr_b-Qso", 5, 0, "null");
+        insert("ChIJUVNrFaCofDURXzK0-E6Qraw", 5, 2, "null");
+        insert("ChIJUVNrFaCofDURiRPHd12sUyM", 5, 0, "null");
+        insert("ChIJN6NHFaCofDURnNxIn68IEik", 5, 2, "null");
     }
 }
