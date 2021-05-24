@@ -359,7 +359,7 @@ public class MapsActivity extends AppCompatActivity
 
                 }
 
-                HashSet<Marker> hashSet = new HashSet<Marker>();
+                    HashSet<Marker> hashSet = new HashSet<Marker>();
                 hashSet.addAll(markerList);
                 markerList.clear();
                 markerList.addAll(hashSet);
