@@ -110,7 +110,7 @@ public class MapsActivity extends AppCompatActivity
     private View mLayout;
 
     //참여버튼
-    private Button button_join = findViewById(R.id.join);;
+    private Button button_join;
 
 
     String placeId;
@@ -124,7 +124,7 @@ public class MapsActivity extends AppCompatActivity
 
         //일단 임의로 설정
         insert("ChIJFwvgnfqpfDUR5IlhmJ088WU", 4, 0);
-        insert("ChIJWQdpaqCofDURWLT-6DDWo7I", 10, 0);
+        insert("ChIJWQdpaqCofDURWLT-6DDWo7I", 8, 0);
         insert("ChIJWQdpaqCofDURWbMIMdaOjJg", 5, 0);
         insert("ChIJWQdpaqCofDURKBe0tsY2JKM", 4, 0);
         insert("ChIJWQdpaqCofDURkTJGlQxLJVI", 2, 0);
@@ -136,14 +136,38 @@ public class MapsActivity extends AppCompatActivity
         insert("ChIJxfSbuompfDURCne8wMu-cRs", 5, 0);
         insert("ChIJAy6v7J-ofDURgrgl8SMgGNc", 5, 0);
 
+        insert("ChIJN76tFKCofDURCCmCS4Ki5WA", 4, 0);
+        insert("ChIJc0QgPKCofDURtlM6UdX9nEc", 6, 0);
+        insert("ChIJ-bZtIqCofDURxE6RGlIxtLo", 5, 0);
+        insert("ChIJ9VGVG5CpfDURuKlOERqL04E", 4, 0);
+        insert("ChIJnWG00BmpfDURu1tHNLj1F4o", 2, 0);
+        insert("ChIJz_vSJKCofDUR1Oins8LRBXE", 4, 0);
+        insert("ChIJYfnSJKCofDURTbp3jC8SS0M", 2, 0);
+        insert("ChIJEWQwAHypfDURHZjw1EgBeqQ", 5, 0);
+        insert("ChIJtYEkPKCofDURUhY63EKzdl4", 5, 0);
+        insert("ChIJze3nIKCofDUR8nw9zokc_Bk", 4, 0);
+        insert("ChIJl4hvIKCofDURxKnfzWqX6ok", 5, 0);
+        insert("ChIJl4hvIKCofDURcFjhejLgQR4", 5, 0);
 
+        insert("ChIJl4hvIKCofDURqyxaLzUCE8w", 4, 0);
+        insert("ChIJGdaK7TGpfDUReYOg5WFl1ZM", 5, 0);
+        insert("ChIJ3_DLP6CofDURJnuZw7Kfwg4", 5, 0);
+        insert("ChIJVfn_MKCofDURuWUhXbWTEGE", 3, 0);
+        insert("ChIJUVNrFaCofDUR6XhTr_b-Qso", 5, 0);
+        insert("ChIJUVNrFaCofDURXzK0-E6Qraw", 5, 0);
+        insert("ChIJUVNrFaCofDURiRPHd12sUyM", 5, 0);
+        insert("ChIJN6NHFaCofDURnNxIn68IEik", 5, 0);
+
+        button_join = (Button)findViewById(R.id.join);
 
         button_join.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 //정원 추가
-                update(placeId, 4,  getGroupPeople( placeId) + 1);
+                update(placeId, getCapacityGroupPeople(placeId), getNowGroupPeople(placeId) + 1);
             }
+
+
         });
 
 
@@ -380,7 +404,8 @@ public class MapsActivity extends AppCompatActivity
                             , place.getLongitude());
 
                     //현재 그룹 인원 마커에 표시
-                    tvMarker.setText( Integer.toString( getGroupPeople(place.getPlaceId()) ) );
+                    tvMarker.setText( Integer.toString( getNowGroupPeople(place.getPlaceId()) ) +
+                            "/" +  Integer.toString( getCapacityGroupPeople(place.getPlaceId()) ));
                     //식당이름 표시
                     tvLabel.setText( place.getName() );
 
@@ -457,13 +482,13 @@ public class MapsActivity extends AppCompatActivity
 
 
     //각 식당 별 그룹인원 반환 : String place_id로 식당 구분
-    public int getGroupPeople(String place_id){
+    public int getNowGroupPeople(String place_id){
         String id;
         int capacity;
         int now = 0;
 
         StringBuffer sb = new StringBuffer();
-        sb.append("SELECT id, capacity,now FROM RESTAURANT WHERE id = " + place_id);
+        sb.append("SELECT id, capacity,now FROM RESTAURANT WHERE id = " + "'" +place_id+ "'");
 
         SQLiteDatabase db = helper.getReadableDatabase();
 
@@ -475,14 +500,33 @@ public class MapsActivity extends AppCompatActivity
             now = cursor.getInt(2);
         }
 
-//        return (int)((Math.random()*10000)%5);
         return now;
     }
 
+    public int getCapacityGroupPeople(String place_id){
+        String id;
+        int capacity = 0;
+        int now = 0;
+
+        StringBuffer sb = new StringBuffer();
+        sb.append("SELECT id, capacity,now FROM RESTAURANT WHERE id = " + "'" +place_id+ "'");
+
+        SQLiteDatabase db = helper.getReadableDatabase();
+
+        Cursor cursor = db.rawQuery(sb.toString(),null);
+
+        while(cursor.moveToNext()){
+            id = cursor.getString(0);
+            capacity = cursor.getInt(1);
+            now = cursor.getInt(2);
+        }
+
+        return capacity;
+    }
 
     //마커를 클릭하면 식당별 정보가 나옵니다.
     @Override
-    public boolean onMarkerClick(@NonNull @NotNull final Marker marker) {
+    public boolean onMarkerClick(@NonNull final Marker marker) {
         //마커를 중심으로 카메라 이동
         mMap.animateCamera(CameraUpdateFactory.newLatLng(marker.getPosition()));
 
@@ -492,7 +536,7 @@ public class MapsActivity extends AppCompatActivity
             if ( placeId == place.getPlaceId() ){
                 restName.setText( place.getName() );
                 restAddress.setText( place.getVicinity() );
-                restGroup.setText( "현재 그룹 인원 : " + getGroupPeople( placeId ) + "명");
+                restGroup.setText( "현재 그룹 인원 : " + getNowGroupPeople( placeId ) + "명");
             }
         }
 
@@ -523,16 +567,16 @@ public class MapsActivity extends AppCompatActivity
         values.put("capacity", capacity);
         values.put("now", now);
 
-        db.update("retaurant", values, "id=?", new String[]{id});
+        db.update("restaurant", values, "id=?", new String[]{id});
     }
     public void delete (String id) {
         db = helper.getWritableDatabase();
-        db.delete("retaurant", "id=?", new String[]{id});
+        db.delete("restaurant", "id=?", new String[]{id});
         Log.i("db1", id + "정상적으로 삭제 되었습니다.");
     }
     public void select() {
         db = helper.getReadableDatabase();
-        Cursor c = db.query("retaurant", null, null, null, null, null, null);
+        Cursor c = db.query("restaurant", null, null, null, null, null, null);
         /* query (String table, String[] columns, String selection, String[]
          * selectionArgs, String groupBy, String having, String orderBy)
          */

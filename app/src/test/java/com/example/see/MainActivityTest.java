@@ -18,15 +18,16 @@ public class MainActivityTest {
         assertEquals(test_pw,user_pw);
     }
 
-//    @Test
-//    void 로그인_테스트_실패(){
-//        String test_id="2222";
-//        String test_pw="4321";
-//
-//        String user_id = mainActivity.userid;
-//        String user_pw = mainActivity.userpw;
-//
-//        assertEquals(test_id, user_id);
-//        assertEquals(test_pw,user_pw);
-//    }
+    @Test
+    public void 로그인_테스트_실패(){
+        String test_id="2222";
+        String test_pw="4321";
+
+        String user_id = MainActivity.userid;
+        String user_pw = MainActivity.userpw;
+
+        assertNotEquals(test_id, user_id);
+        assertNotEquals(test_pw,user_pw);
+
+    }
 }
