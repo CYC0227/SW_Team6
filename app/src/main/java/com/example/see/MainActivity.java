@@ -10,8 +10,8 @@ import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
     public static final int REQUEST_CODE_MENU=101;
-    String userid="1111";
-    String userpw="1234";
+    static String userid="1111";
+    static String userpw="1234";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

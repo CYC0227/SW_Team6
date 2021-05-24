@@ -13,6 +13,7 @@ import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -141,6 +142,15 @@ public class MapsActivity extends AppCompatActivity
                 .findFragmentById(R.id.map);
         //onMapReady 호출
         mapFragment.getMapAsync(this);
+
+        Button btnReservTime= (Button) findViewById(R.id.reserveTime);
+        btnReservTime.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent=new Intent(getApplicationContext(), reservation.class);
+                startActivity(intent);
+            }
+        });
     }
 
 
